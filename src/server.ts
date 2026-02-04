@@ -1,4 +1,6 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
+import type { Request, Response } from 'express';
+
 import Stripe from 'stripe';
 import cors from 'cors';
 import dotenv from 'dotenv';
