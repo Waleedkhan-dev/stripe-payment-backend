@@ -4,6 +4,7 @@ import type { Request, Response } from 'express';
 import Stripe from 'stripe';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { it } from 'node:test';
 
 dotenv.config();
 
@@ -27,33 +28,50 @@ app.get("/", (req: Request  , res: Response) => {
 });
 app.post('/create-checkout-session', async (req: Request, res: Response) => {
   try {
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: 'VIP Backer Deposit',
-              description: 'Reserve your VIP spot with $1 refundable deposit',
-            },
-            unit_amount: 100,
-          },
-          quantity: 1,
+    const { items, shippingCost } = req.body;
+
+    if (!items || items.length === 0) {
+      return res.status(400).json({ error: 'Cart is empty' });
+    }
+
+    const line_items = items.map((item: any) => ({
+      price_data: {
+        currency: 'usd',
+        product_data: {
+          name: item.name,
         },
-      ],
+        unit_amount: Math.round(item.price * 100), // 👈 REAL PRICE
+      },
+      quantity: item.quantity,
+    }));
+
+    // Optional shipping
+    if (shippingCost > 0) {
+      line_items.push({
+        price_data: {
+          currency: 'usd',
+          product_data: { name: 'Shipping' },
+          unit_amount: Math.round(shippingCost * 100),
+        },
+        quantity: 1,
+      });
+    }
+
+    const session = await stripe.checkout.sessions.create({
       mode: 'payment',
+      payment_method_types: ['card'],
+      line_items,
       success_url: 'http://localhost:8080/success',
       cancel_url: 'http://localhost:8080/cancel',
     });
 
-    // NEW: send the session URL instead of ID
     res.json({ url: session.url });
   } catch (error: any) {
     console.error(error);
     res.status(500).json({ error: error.message });
   }
 });
+
 
 const PORT = process.env.PORT || 4242;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
