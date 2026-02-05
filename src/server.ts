@@ -22,6 +22,9 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 app.use(cors());
 app.use(express.json());
 
+app.get("/", (req: Request  , res: Response) => {
+  res.send("Stripe Payment Backend is running.");
+});
 app.post('/create-checkout-session', async (req: Request, res: Response) => {
   try {
     const session = await stripe.checkout.sessions.create({
