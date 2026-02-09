@@ -61,8 +61,8 @@ app.post('/create-checkout-session', async (req: Request, res: Response) => {
       mode: 'payment',
       payment_method_types: ['card'],
       line_items,
-      success_url: 'http://localhost:8080/success',
-      cancel_url: 'http://localhost:8080/cancel',
+      success_url: 'https://www.bevvybullet.com/success',
+      cancel_url: 'https://www.bevvybullet.com/cancel',
     });
 
     res.json({ url: session.url });
